@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Save, LogOut } from 'lucide-react';
+import { User, Mail, Lock, Save, LogOut, Check } from 'lucide-react'; // Add Check import here
 import Navbar from '@/components/Navbar';
 
 interface UserData {

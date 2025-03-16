@@ -25,7 +25,7 @@ const Admin = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState({
-    id: '',
+    id: 0, // Changed from string to number to match Product type
     name: '',
     price: 0,
     description: '',
@@ -89,11 +89,11 @@ const Admin = () => {
     
     // Actualizar la lista local (simulación)
     if (editingProduct) {
-      setProducts(prev => prev.map(p => p.id === productForm.id ? {...productForm as Product} : p));
+      setProducts(prev => prev.map(p => p.id === productForm.id ? {...productForm as unknown as Product} : p));
     } else {
       const newProduct = {
         ...productForm,
-        id: Date.now().toString(), // Generar ID único
+        id: Date.now(), // Generate a numeric ID instead of string
       } as Product;
       setProducts(prev => [...prev, newProduct]);
     }
@@ -101,7 +101,7 @@ const Admin = () => {
     // Limpiar formulario
     setEditingProduct(null);
     setProductForm({
-      id: '',
+      id: 0, // Reset to 0 instead of empty string
       name: '',
       price: 0,
       description: '',
@@ -111,7 +111,7 @@ const Admin = () => {
     });
   };
 
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteProduct = (id: number) => { // Change parameter type to number
     // En un sistema real, esto se enviaría a una API
     toast.success('Producto eliminado con éxito');
     

@@ -107,3 +107,8 @@ export const formatPrice = (price: number): string => {
     currency: 'EUR'
   }).format(price);
 };
+
+// Add the missing function to get all products
+export const getAllProducts = (): Product[] => {
+  return products;
+};
