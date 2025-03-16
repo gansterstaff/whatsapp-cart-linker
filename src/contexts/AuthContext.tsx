@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   createUserWithEmailAndPassword, 
@@ -73,8 +74,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
       });
       
-      // Enviar email de verificación
-      await sendVerificationEmail();
+      // Enviar email de verificación solo si el usuario está autenticado
+      if (auth.currentUser) {
+        await sendVerificationEmail();
+      }
       
       return;
     } catch (error: any) {
@@ -180,6 +183,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      
+      // Forzar selección de cuenta incluso si ya ha iniciado sesión antes
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
@@ -198,7 +207,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success('Inicio de sesión con Google exitoso');
     } catch (error: any) {
       console.error("Error al iniciar sesión con Google:", error);
-      toast.error(`Error al iniciar sesión con Google: ${error.message}`);
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        toast.error("Error: Este dominio no está autorizado para autenticación con Google. Por favor, añada este dominio a la configuración de Firebase Authentication.");
+      } else {
+        toast.error(`Error al iniciar sesión con Google: ${error.message}`);
+      }
+      
       throw error;
     }
   };
