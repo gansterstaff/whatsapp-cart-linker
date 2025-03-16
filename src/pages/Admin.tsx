@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ const Admin = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState({
-    id: 0, // Changed from string to number to match Product type
+    id: 0,
     name: '',
     price: 0,
     description: '',
@@ -35,7 +34,6 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    // Verificar autenticación (simplificado para demo)
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (!isLoggedIn) {
       toast.error('Debes iniciar sesión para acceder al panel de administración');
@@ -43,10 +41,8 @@ const Admin = () => {
       return;
     }
     
-    // En un sistema real verificaríamos si el usuario tiene rol de administrador
     setIsAuthenticated(true);
     
-    // Cargar productos
     const loadedProducts = getAllProducts();
     setProducts(loadedProducts);
   }, [navigate]);
@@ -78,30 +74,26 @@ const Admin = () => {
   };
 
   const handleSaveProduct = () => {
-    // Validación básica
     if (!productForm.name || productForm.price <= 0 || !productForm.description || !productForm.imageUrl) {
       toast.error('Por favor complete todos los campos requeridos');
       return;
     }
 
-    // En un sistema real, esto se enviaría a una API
     toast.success(`Producto ${editingProduct ? 'actualizado' : 'creado'} con éxito`);
     
-    // Actualizar la lista local (simulación)
     if (editingProduct) {
       setProducts(prev => prev.map(p => p.id === productForm.id ? {...productForm as unknown as Product} : p));
     } else {
       const newProduct = {
         ...productForm,
-        id: Date.now(), // Generate a numeric ID instead of string
+        id: Date.now(),
       } as Product;
       setProducts(prev => [...prev, newProduct]);
     }
     
-    // Limpiar formulario
     setEditingProduct(null);
     setProductForm({
-      id: 0, // Reset to 0 instead of empty string
+      id: 0,
       name: '',
       price: 0,
       description: '',
@@ -111,11 +103,9 @@ const Admin = () => {
     });
   };
 
-  const handleDeleteProduct = (id: number) => { // Change parameter type to number
-    // En un sistema real, esto se enviaría a una API
+  const handleDeleteProduct = (id: number) => {
     toast.success('Producto eliminado con éxito');
     
-    // Actualizar la lista local (simulación)
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
@@ -131,7 +121,6 @@ const Admin = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Panel de Administración</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-4 bg-whatsapp text-white">
@@ -209,7 +198,6 @@ const Admin = () => {
             </div>
           </div>
           
-          {/* Content area */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-lg shadow-md p-6">
               {activeTab === 'dashboard' && (
@@ -350,7 +338,7 @@ const Admin = () => {
                           onClick={() => {
                             setEditingProduct(null);
                             setProductForm({
-                              id: '',
+                              id: 0,
                               name: '',
                               price: 0,
                               description: '',
