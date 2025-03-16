@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   createUserWithEmailAndPassword, 
@@ -8,7 +7,9 @@ import {
   sendEmailVerification, 
   updatePassword,
   User,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -24,6 +25,7 @@ interface AuthContextType {
   updateUserPassword: (newPassword: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -174,6 +176,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Iniciar sesión con Google
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Verificar si el usuario ya existe en Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      // Si no existe, guardar información en Firestore
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, "users", user.uid), {
+          name: user.displayName,
+          email: user.email,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      
+      toast.success('Inicio de sesión con Google exitoso');
+    } catch (error: any) {
+      console.error("Error al iniciar sesión con Google:", error);
+      toast.error(`Error al iniciar sesión con Google: ${error.message}`);
+      throw error;
+    }
+  };
+
   const value = {
     currentUser,
     loading,
@@ -183,7 +212,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUserProfile,
     updateUserPassword,
     sendVerificationEmail,
-    resetPassword
+    resetPassword,
+    signInWithGoogle
   };
 
   return (
