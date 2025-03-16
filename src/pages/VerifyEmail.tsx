@@ -1,63 +1,60 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Mail, Check } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 
 const VerifyEmail = () => {
   const [isSending, setIsSending] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser, sendVerificationEmail } = useAuth();
   
-  // Obtener el correo del usuario (en un sistema real vendría del backend)
-  const userEmail = JSON.parse(localStorage.getItem('user') || '{}').email || 'tu@email.com';
+  useEffect(() => {
+    // Si no hay usuario, redirigir al login
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
+    // Si el usuario ya está verificado, redirigir a la página principal
+    if (currentUser.emailVerified) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
+
+  // Si no hay usuario, no renderizar nada (para evitar parpadeo antes de la redirección)
+  if (!currentUser) return null;
 
   const handleResendEmail = async () => {
     setIsSending(true);
     
     try {
-      // Simulamos el envío del correo (esto se conectaría a una API real)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success('Correo de verificación enviado');
+      await sendVerificationEmail();
     } catch (error) {
       console.error('Error al enviar el correo:', error);
-      toast.error('Error al enviar el correo de verificación');
+      // El mensaje de error es manejado por el AuthContext
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleVerify = () => {
-    // Simulamos la verificación (en un sistema real, esto se haría a través de un enlace en el correo)
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    user.isVerified = true;
-    localStorage.setItem('user', JSON.stringify(user));
-    setIsVerified(true);
-    toast.success('¡Correo verificado correctamente!');
+  // Para fines de demo, agregamos una función para recargar y verificar si el correo ha sido verificado
+  const checkVerification = () => {
+    currentUser.reload().then(() => {
+      if (currentUser.emailVerified) {
+        toast.success('¡Correo verificado correctamente!');
+        navigate('/');
+      } else {
+        toast.error('Tu correo aún no ha sido verificado');
+      }
+    }).catch(error => {
+      console.error('Error al verificar estado:', error);
+      toast.error('Error al verificar estado de verificación');
+    });
   };
-
-  if (isVerified) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-md mx-auto text-center">
-            <div className="mb-6 mx-auto w-20 h-20 flex items-center justify-center rounded-full bg-green-100">
-              <Check className="h-10 w-10 text-whatsapp" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Correo verificado!</h2>
-            <p className="text-gray-600 mb-8">Tu cuenta ha sido verificada correctamente. Ahora puedes disfrutar de todos los beneficios de nuestra tienda.</p>
-            <Link to="/login">
-              <Button className="bg-whatsapp hover:bg-whatsapp-dark text-white">
-                Iniciar sesión
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,7 +66,7 @@ const VerifyEmail = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Verifica tu correo electrónico</h2>
           <p className="text-gray-600 mb-6">
-            Hemos enviado un correo de verificación a <span className="font-semibold">{userEmail}</span>.
+            Hemos enviado un correo de verificación a <span className="font-semibold">{currentUser.email}</span>.
             Haz clic en el enlace del correo para verificar tu cuenta.
           </p>
           <div className="space-y-4">
@@ -82,12 +79,12 @@ const VerifyEmail = () => {
               {isSending ? 'Enviando...' : 'Reenviar correo de verificación'}
             </Button>
             
-            {/* Botón para simular la verificación (solo para demostración) */}
+            {/* Botón para verificar el estado de verificación */}
             <Button 
-              onClick={handleVerify} 
+              onClick={checkVerification} 
               className="w-full bg-whatsapp hover:bg-whatsapp-dark text-white"
             >
-              Simular verificación (demo)
+              Verificar estado
             </Button>
             
             <p className="text-sm text-gray-500 mt-6">

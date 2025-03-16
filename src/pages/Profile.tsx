@@ -4,19 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Save, LogOut, Check } from 'lucide-react'; // Add Check import here
+import { User, Mail, Lock, Save, LogOut, Check } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  isVerified: boolean;
-}
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { currentUser, logout, updateUserProfile, updateUserPassword, sendVerificationEmail } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     currentPassword: '',
@@ -24,23 +18,20 @@ const Profile = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [verifyEmailLoading, setVerifyEmailLoading] = useState(false);
 
   useEffect(() => {
     // Verificar si el usuario está autenticado
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (!isLoggedIn) {
+    if (!currentUser) {
       navigate('/login');
       return;
     }
 
     // Cargar datos del usuario
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      setUserData(user);
-      setFormData(prev => ({ ...prev, name: user.name }));
+    if (currentUser) {
+      setFormData(prev => ({ ...prev, name: currentUser.displayName || '' }));
     }
-  }, [navigate]);
+  }, [currentUser, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,28 +43,23 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      // Validar que las contraseñas coincidan si se está intentando cambiar
-      if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-        toast.error('Las contraseñas no coinciden');
-        setLoading(false);
-        return;
+      // Actualizar nombre
+      if (formData.name !== currentUser?.displayName) {
+        await updateUserProfile(formData.name);
       }
 
-      // Simulamos la actualización (en un sistema real habría validación de la contraseña actual)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Actualizar contraseña si se proporcionó
+      if (formData.newPassword) {
+        // Validar que las contraseñas coincidan
+        if (formData.newPassword !== formData.confirmPassword) {
+          toast.error('Las contraseñas no coinciden');
+          setLoading(false);
+          return;
+        }
 
-      // Actualizar los datos del usuario en localStorage
-      if (userData) {
-        const updatedUser = {
-          ...userData,
-          name: formData.name,
-        };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUserData(updatedUser);
+        await updateUserPassword(formData.newPassword);
       }
 
-      toast.success('Perfil actualizado con éxito');
-      
       // Limpiar los campos de contraseña
       setFormData(prev => ({
         ...prev,
@@ -83,19 +69,33 @@ const Profile = () => {
       }));
     } catch (error) {
       console.error('Error al actualizar el perfil:', error);
-      toast.error('Error al actualizar el perfil');
+      // Los mensajes de error son manejados por el AuthContext
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    toast.success('Sesión cerrada con éxito');
-    navigate('/login');
+  const handleSendVerificationEmail = async () => {
+    setVerifyEmailLoading(true);
+    try {
+      await sendVerificationEmail();
+    } catch (error) {
+      console.error('Error al enviar correo de verificación:', error);
+    } finally {
+      setVerifyEmailLoading(false);
+    }
   };
 
-  if (!userData) {
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
+  if (!currentUser) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   }
 
@@ -113,14 +113,24 @@ const Profile = () => {
                   <User className="h-8 w-8" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">{userData.name}</h2>
+                  <h2 className="text-xl font-semibold">{currentUser.displayName}</h2>
                   <div className="flex items-center mt-1">
                     <Mail className="h-4 w-4 text-gray-500 mr-1" />
-                    <span className="text-gray-600 text-sm">{userData.email}</span>
-                    {userData.isVerified && (
+                    <span className="text-gray-600 text-sm">{currentUser.email}</span>
+                    {currentUser.emailVerified ? (
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                         <Check className="h-3 w-3 mr-1" /> Verificado
                       </span>
+                    ) : (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={handleSendVerificationEmail}
+                        disabled={verifyEmailLoading}
+                        className="ml-2 text-xs text-amber-600 hover:text-amber-700"
+                      >
+                        {verifyEmailLoading ? 'Enviando...' : 'Verificar email'}
+                      </Button>
                     )}
                   </div>
                 </div>

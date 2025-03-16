@@ -1,19 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, currentUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Si el usuario ya está autenticado, redirigir a la página principal
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,34 +41,12 @@ const Login = () => {
     }
 
     try {
-      // Simulamos la autenticación (esto se conectaría a una API real más adelante)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Verificamos si el usuario existe en localStorage (temporal)
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        toast.error('Usuario no encontrado');
-        setLoading(false);
-        return;
-      }
-      
-      const user = JSON.parse(userStr);
-      if (user.email !== formData.email) {
-        toast.error('Credenciales incorrectas');
-        setLoading(false);
-        return;
-      }
-      
-      // En un sistema real, verificaríamos la contraseña hash
-      
-      // Guardamos el estado de la sesión
-      localStorage.setItem('isLoggedIn', 'true');
-      
+      await login(formData.email, formData.password);
       toast.success('Inicio de sesión exitoso');
       navigate('/');
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      toast.error('Error al iniciar sesión. Inténtalo de nuevo.');
+      // Los mensajes de error son manejados por el AuthContext
     } finally {
       setLoading(false);
     }

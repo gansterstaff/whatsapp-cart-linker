@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register, currentUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,6 +18,13 @@ const Register = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Si el usuario ya está autenticado, redirigir a la página principal
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,22 +49,12 @@ const Register = () => {
     }
 
     try {
-      // Simulamos el registro (esto se conectaría a una API real más adelante)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Guardamos el usuario en localStorage (temporal, en producción usaríamos un backend real)
-      localStorage.setItem('user', JSON.stringify({
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        isVerified: false,
-      }));
-      
+      await register(formData.name, formData.email, formData.password);
       toast.success('Registro exitoso. Por favor verifica tu correo electrónico.');
       navigate('/verify-email');
     } catch (error) {
       console.error('Error al registrar:', error);
-      toast.error('Error al crear la cuenta. Inténtalo de nuevo.');
+      // Los mensajes de error son manejados por el AuthContext
     } finally {
       setLoading(false);
     }
