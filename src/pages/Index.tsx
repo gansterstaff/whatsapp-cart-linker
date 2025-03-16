@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ProductGrid from '@/components/ProductGrid';
 import Navbar from '@/components/Navbar';
+import AnimatedBanner from '@/components/AnimatedBanner';
 import { getFeaturedProducts } from '@/lib/productData';
 
 const Index = () => {
@@ -13,40 +14,11 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Hero section */}
-      <section className="bg-gradient-to-b from-white to-gray-100">
-        <div className="container mx-auto px-4 py-16 flex flex-col lg:flex-row items-center gap-8">
-          <div className="lg:w-1/2">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-              Compra fácil, paga por WhatsApp
-            </h1>
-            <p className="mt-4 text-xl text-gray-600">
-              Descubre nuestra selección de productos y finaliza tu compra con un 
-              simple mensaje de WhatsApp.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <Link to="/products">
-                <Button className="bg-whatsapp hover:bg-whatsapp-dark text-white">
-                  Ver productos
-                </Button>
-              </Link>
-              <a href="#como-funciona">
-                <Button variant="outline">
-                  Cómo funciona
-                </Button>
-              </a>
-            </div>
-          </div>
-          <div className="lg:w-1/2">
-            <img 
-              src="https://images.unsplash.com/photo-1592890288564-76628a30a657?q=80&w=2070&auto=format&fit=crop" 
-              alt="Shopping on mobile" 
-              className="rounded-lg shadow-xl"
-            />
-          </div>
-        </div>
+      {/* Banner animado */}
+      <section className="container mx-auto px-4 py-6">
+        <AnimatedBanner />
       </section>
-
+      
       {/* Featured products section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -130,6 +102,8 @@ const Index = () => {
               <ul className="space-y-2">
                 <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
                 <li><Link to="/products" className="text-gray-400 hover:text-white">Productos</Link></li>
+                <li><Link to="/contact" className="text-gray-400 hover:text-white">Contacto</Link></li>
+                <li><Link to="/login" className="text-gray-400 hover:text-white">Mi cuenta</Link></li>
               </ul>
             </div>
             
