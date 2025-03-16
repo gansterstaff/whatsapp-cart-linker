@@ -1,13 +1,16 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingCart, Menu, X, Search } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { ShoppingCart, Menu, X, Search, User, LogIn, UserPlus, UserCheck, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Cart from './Cart';
 
 const Navbar: React.FC = () => {
   const { totalItems } = useCart();
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,6 +27,15 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
     // In a real app, we would navigate to search results
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (
@@ -64,6 +76,37 @@ const Navbar: React.FC = () => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-4">
+            {/* Auth Buttons */}
+            {currentUser ? (
+              <>
+                <Link to="/profile">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <UserCheck className="h-5 w-5" />
+                    <span className="hidden sm:inline">{currentUser.displayName || 'Perfil'}</span>
+                  </Button>
+                </Link>
+                <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2">
+                  <LogOut className="h-5 w-5" />
+                  <span className="hidden sm:inline">Salir</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <LogIn className="h-5 w-5" />
+                    <span className="hidden sm:inline">Ingresar</span>
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    <span className="hidden sm:inline">Registro</span>
+                  </Button>
+                </Link>
+              </>
+            )}
+
             {/* Cart Button */}
             <Button
               variant="ghost"
@@ -108,6 +151,57 @@ const Navbar: React.FC = () => {
             >
               Productos
             </Link>
+            
+            {/* Auth Links in Mobile Menu */}
+            {currentUser ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-5 w-5" />
+                    <span>Mi Perfil</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                >
+                  <div className="flex items-center gap-2">
+                    <LogOut className="h-5 w-5" />
+                    <span>Cerrar Sesión</span>
+                  </div>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <LogIn className="h-5 w-5" />
+                    <span>Iniciar Sesión</span>
+                  </div>
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    <span>Registrarse</span>
+                  </div>
+                </Link>
+              </>
+            )}
             
             {/* Search Form - Mobile */}
             <form onSubmit={handleSearch} className="px-4">
